@@ -1,4 +1,4 @@
-# dq-tf-tableau-backup-monitor
+# dq-tf-tableau-backup-monitor.
 
 
 These Lambdas watches the S3 Bucket which lands backups for Internal and External Tableau It checks to see that files are regularly being received.
