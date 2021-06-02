@@ -32,4 +32,4 @@ class TestE2E(unittest.TestCase):
         self.result = self.runner.result
 
     def test_name_suffix_int_tab_lambda_monitor(self):
-        self.assertEqual(self.runner.get_value("module.tableau_backup_monitor.aws_lambda_function.int_tab_monitor", "tags"), {"Name": "lambda-acl-data-ingest-monitor-apps-preprod-dq"})
+        self.assertEqual(self.runner.get_value("module.tableau_backup_monitor.aws_lambda_function.int_tab_monitor", "tags"), {"Name": "lambda-int-tab-monitor-apps-preprod-dq"})
