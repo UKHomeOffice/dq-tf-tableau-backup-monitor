@@ -131,7 +131,7 @@ def lambda_handler(event, context):
 
         bucket_name = os.environ['bucket_name']
         LOGGER.info('bucket_name:{0}'.format(bucket_name))
-        path = os.environ['path_']
+        path = os.environ['path_int_tab']
         LOGGER.info('path:{0}'.format(path))
         threashold_min = os.environ.get('threashold_min', '900')
         LOGGER.info('threashold_min:{0}'.format(threashold_min))
@@ -142,7 +142,7 @@ def lambda_handler(event, context):
             threashold_min = int(threashold_min)
             x_mins = datetime.now() - timedelta(minutes=threashold_min)
             x_mins = x_mins.astimezone(from_zone)
-            prefix_search = path + x_mins.strftime('%Y-%m-%d') + "/"
+            prefix_search = path
             LOGGER.info('built prefix to search :{0}'.format(prefix_search))
 
             LOGGER.info('Search bucket: {0} and search_path : {1}'.format(bucket_name, prefix_search))
