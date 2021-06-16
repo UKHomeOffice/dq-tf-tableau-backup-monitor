@@ -151,7 +151,7 @@ resource "aws_iam_role_policy_attachment" "ext_tab_monitor_logs" {
 resource "aws_cloudwatch_event_rule" "ext_tab_monitor" {
   name                = "${var.ext_tab_monitor_name}-${var.namespace}-cw-event-rule"
   description         = "Fires 9am Mon - Fri"
-  schedule_expression = "cron(9 0 ? * MON-FRI *)"
+  schedule_expression = "cron(0 9 ? * MON-FRI *)"
   is_enabled          = "true"
 }
 
