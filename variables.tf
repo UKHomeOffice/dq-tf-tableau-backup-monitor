@@ -20,7 +20,7 @@ variable "int_tab_monitor_name" {
 }
 
 variable "int_tab_monitor_lambda_run" {
-  default = "900"
+  default = "1380"
 }
 
 variable "int_tab_input_bucket" {
