@@ -150,8 +150,8 @@ resource "aws_iam_role_policy_attachment" "int_tab_monitor_logs" {
 
 resource "aws_cloudwatch_event_rule" "int_tab_monitor" {
   name                = "${var.int_tab_monitor_name}-${var.namespace}-cw-event-rule"
-  description         = "Fires 9am Mon - Fri"
-  schedule_expression = "cron(0 9 ? * MON-FRI *)"
+  description         = "Fires 11am (UTC) Mon - Fri"
+  schedule_expression = "cron(0 11 ? * MON-FRI *)"
   is_enabled          = "true"
 }
 
