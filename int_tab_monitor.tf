@@ -67,12 +67,12 @@ EOF
 
 data "archive_file" "int_tab_monitor_zip" {
   type        = "zip"
-  source_dir  = "${local.path_module}/lambda/int_tab_monitor/code"
-  output_path = "${local.path_module}/lambda/int_tab_monitor/package/lambda.zip"
+  source_dir  = "${local.path_module}/lambda/tab_monitor/code"
+  output_path = "${local.path_module}/lambda/tab_monitor/package/int_tab_lambda.zip"
 }
 
 resource "aws_lambda_function" "int_tab_monitor" {
-  filename         = "${path.module}/lambda/int_tab_monitor/package/lambda.zip"
+  filename         = "${path.module}/lambda/tab_monitor/package/int_tab_lambda.zip"
   function_name    = "${var.int_tab_monitor_name}-${var.namespace}-lambda"
   role             = aws_iam_role.int_tab_monitor.arn
   handler          = "function.lambda_handler"
@@ -84,7 +84,7 @@ resource "aws_lambda_function" "int_tab_monitor" {
   environment {
     variables = {
       bucket_name    = "${var.int_tab_input_bucket}-${var.namespace}"
-      threashold_min = var.int_tab_monitor_lambda_run
+      threshold_min = var.int_tab_monitor_lambda_run
       path_int_tab   = var.output_path_int_tab
     }
   }

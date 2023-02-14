@@ -67,12 +67,12 @@ EOF
 
 data "archive_file" "ext_tab_monitor_zip" {
   type        = "zip"
-  source_dir  = "${local.path_module}/lambda/ext_tab_monitor/code"
-  output_path = "${local.path_module}/lambda/ext_tab_monitor/package/lambda.zip"
+  source_dir  = "${local.path_module}/lambda/tab_monitor/code"
+  output_path = "${local.path_module}/lambda/tab_monitor/package/ext_tab_lambda.zip"
 }
 
 resource "aws_lambda_function" "ext_tab_monitor" {
-  filename         = "${path.module}/lambda/ext_tab_monitor/package/lambda.zip"
+  filename         = "${path.module}/lambda/tab_monitor/package/ext_tab_lambda.zip"
   function_name    = "${var.ext_tab_monitor_name}-${var.namespace}-lambda"
   role             = aws_iam_role.ext_tab_monitor.arn
   handler          = "function.lambda_handler"
@@ -84,7 +84,7 @@ resource "aws_lambda_function" "ext_tab_monitor" {
   environment {
     variables = {
       bucket_name    = "${var.ext_tab_input_bucket}-${var.namespace}"
-      threashold_min = var.ext_tab_monitor_lambda_run
+      threshold_min = var.ext_tab_monitor_lambda_run
       path_ext_tab   = var.output_path_ext_tab
     }
   }
@@ -150,8 +150,8 @@ resource "aws_iam_role_policy_attachment" "ext_tab_monitor_logs" {
 
 resource "aws_cloudwatch_event_rule" "ext_tab_monitor" {
   name                = "${var.ext_tab_monitor_name}-${var.namespace}-cw-event-rule"
-  description         = "Fires 9am Mon - Fri"
-  schedule_expression = "cron(0 9 ? * MON-FRI *)"
+  description         = "Fires 1pm Mon - Fri"
+  schedule_expression = "cron(0 13 ? * MON-FRI *)"
   is_enabled          = "true"
 }
 

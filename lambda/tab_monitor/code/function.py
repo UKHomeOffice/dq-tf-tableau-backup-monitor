@@ -1,6 +1,5 @@
-# pylint: disable=broad-except
 """
-Copy files from one S3 location to another
+Check that Tableau backup files are arriving in S3 regularly
 """
 import json
 import logging
@@ -26,7 +25,16 @@ CONFIG = Config(
 
 
 def error_handler(lineno, error, fail=True):
+    """
+    Generic code to handle all errors that occur in this program
+    Args:
+        lineno: The line number that the error occurred on
+        error: The error message (exception text)
+        fail: Whether to quit execution or not
 
+    Returns:
+        Nothing - program usually exits
+    """
     try:
         LOGGER.error('The following error has occurred on line: %s', lineno)
         LOGGER.error(str(error))
@@ -40,7 +48,6 @@ def error_handler(lineno, error, fail=True):
             sys.exit(1)
 
     except Exception as err:
-        error_handler(sys.exc_info()[2].tb_lineno, err)
         LOGGER.error(
             'The following error has occurred on line: %s',
             sys.exc_info()[2].tb_lineno)
@@ -54,7 +61,7 @@ def send_message_to_slack(text):
     Args:
         text : the message to be displayed on the Slack channel
     Returns:
-        Slack API repsonse
+        Slack API response
     """
 
     try:
@@ -99,6 +106,7 @@ def send_message_to_slack(text):
                 headers={'Content-Type': 'application/json'})
             LOGGER.info('Sending notification to Slack')
             response = urllib.request.urlopen(req)
+            LOGGER.info('Response from Slack: ', response)
 
         else:
             LOGGER.info('Value for Slack SSM parameter %s not found. No notification sent', ssm_param_name)
@@ -111,11 +119,11 @@ def send_message_to_slack(text):
         LOGGER.error(str(err))
 
 
-# pylint: disable=unused-argument
 def lambda_handler(event, context):
     """
-    Trigger by cloudwatch rules to check API file are reguarly receiving or not
+    Triggered by cloudwatch rules to check if Tableau backup files are being regularly received
     Args:
+        event: CW Event/EventBridge trigger
         context (LamdaContext) : Runtime information
     Returns:
         null
@@ -133,14 +141,14 @@ def lambda_handler(event, context):
         LOGGER.info('bucket_name:{0}'.format(bucket_name))
         path = os.environ['path_int_tab']
         LOGGER.info('path:{0}'.format(path))
-        threashold_min = os.environ.get('threashold_min', '900')
-        LOGGER.info('threashold_min:{0}'.format(threashold_min))
+        threshold_min = os.environ.get('threshold_min', '900')
+        LOGGER.info('threshold_min:{0}'.format(threshold_min))
 
         try:
             from_zone = tz.tzutc()
             #to_zone = tz.gettz('Europe/London')
-            threashold_min = int(threashold_min)
-            x_mins = datetime.now() - timedelta(minutes=threashold_min)
+            threshold_min = int(threshold_min)
+            x_mins = datetime.now() - timedelta(minutes=threshold_min)
             x_mins = x_mins.astimezone(from_zone)
             prefix_search = path
             LOGGER.info('built prefix to search :{0}'.format(prefix_search))
@@ -160,13 +168,13 @@ def lambda_handler(event, context):
                 #obj_bst = obj_utc.astimezone(to_zone)
                 LOGGER.info('Lastest file timestamps : {0}'.format(obj_utc.strftime('%Y-%m-%d %H:%M:%S')))
                 if x_mins > obj_utc:
-                    LOGGER.info('Please investigate Internal Tableau Backup Uploads. No backups uploaded for the last {0} minutes'.format(threashold_min))
-                    send_message_to_slack('Please investigate * Internal Tableau Backups*! No backups uploaded for the last {0} minutes. Last backup {1} was uploaded on {2} '.format(threashold_min, obj_name, obj_utc))
+                    LOGGER.info('Please investigate Internal Tableau Backup Uploads. No backups uploaded for the last {0} minutes'.format(threshold_min))
+                    send_message_to_slack('Please investigate * Internal Tableau Backups*! No backups uploaded for the last {0} minutes. Last backup {1} was uploaded on {2} '.format(threshold_min, obj_name, obj_utc))
                 else:
-                    LOGGER.info('Nightly Backup uploaded succesffuly within last {0} minutes, nothing to do'.format(threashold_min))
+                    LOGGER.info('Daily backup uploaded successfully within last {0} minutes, nothing to do'.format(threshold_min))
             else:
                 LOGGER.info('No backups uploaded for the last {0}'.format(x_mins.strftime('%Y-%m-%d')))
-                send_message_to_slack('Please investigate Internal Tableau Backup Uploads! No backups uploaded for the last {0}'.format(x_mins.strftime('%Y-%m-%d')))
+                send_message_to_slack('Please investigate Internal Tableau backup uploads! No backups uploaded for the last {0}'.format(x_mins.strftime('%Y-%m-%d')))
 
         except Exception as err:
             error_handler(sys.exc_info()[2].tb_lineno, err)
