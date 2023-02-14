@@ -16,6 +16,7 @@ LOGGER = logging.getLogger()
 LOGGER.setLevel(logging.INFO)
 LOG_GROUP_NAME = None
 LOG_STREAM_NAME = None
+INTERNAL_EXTERNAL = None
 
 CONFIG = Config(
     retries=dict(
@@ -41,7 +42,8 @@ def error_handler(lineno, error, fail=True):
         sess = boto3.session.Session()
         region = sess.region_name
 
-        message = "https://{0}.console.aws.amazon.com/cloudwatch/home?region={0}#logEventViewer:group={1};stream={2}".format(region, LOG_GROUP_NAME, LOG_STREAM_NAME)
+        message = "https://{0}.console.aws.amazon.com/cloudwatch/home?region={0}#logEventViewer:group={1};stream={2}".format(
+            region, LOG_GROUP_NAME, LOG_STREAM_NAME)
 
         send_message_to_slack('Pipeline error: {0}'.format(message))
         if fail:
@@ -83,7 +85,7 @@ def send_message_to_slack(text):
                     "footer_icon": "https://platform.slack-edge.com/img/default_application_icon.png"
                 }
             ]
-            }
+        }
 
         ssm_param_name = 'slack_notification_webhook'
         ssm = boto3.client('ssm', config=CONFIG)
@@ -131,8 +133,17 @@ def lambda_handler(event, context):
     try:
         global LOG_GROUP_NAME
         global LOG_STREAM_NAME
+        global INTERNAL_EXTERNAL
         LOG_GROUP_NAME = context.log_group_name
         LOG_STREAM_NAME = context.log_stream_name
+        if "int" in LOG_GROUP_NAME:
+            INTERNAL_EXTERNAL = "Internal"
+        elif "ext" in LOG_GROUP_NAME:
+            INTERNAL_EXTERNAL = "External"
+        else:
+            msg = 'Could not determine if the monitor is Internal or External Tableau from LOG_GROUP_NAME: ' + LOG_GROUP_NAME
+            LOGGER.error(msg)
+            raise ValueError(msg)
 
         LOGGER.info('The following event was received:')
         LOGGER.info(event)
@@ -141,12 +152,12 @@ def lambda_handler(event, context):
         LOGGER.info('bucket_name:{0}'.format(bucket_name))
         path = os.environ['path_int_tab']
         LOGGER.info('path:{0}'.format(path))
-        threshold_min = os.environ.get('threshold_min', '900')
+        threshold_min = os.environ.get('threshold_min', '1380')  # default value 23 hours in mins
         LOGGER.info('threshold_min:{0}'.format(threshold_min))
 
         try:
             from_zone = tz.tzutc()
-            #to_zone = tz.gettz('Europe/London')
+            # to_zone = tz.gettz('Europe/London')
             threshold_min = int(threshold_min)
             x_mins = datetime.now() - timedelta(minutes=threshold_min)
             x_mins = x_mins.astimezone(from_zone)
@@ -155,26 +166,37 @@ def lambda_handler(event, context):
 
             LOGGER.info('Search bucket: {0} and search_path : {1}'.format(bucket_name, prefix_search))
             s3 = boto3.resource("s3")
-            get_last_modified = lambda obj: int(obj.last_modified.strftime('%s'))
+
+            def get_last_modified(obj):
+                return int(obj.last_modified.strftime('%s'))
+
             bucket = s3.Bucket(bucket_name)
             objs = [obj for obj in bucket.objects.filter(Prefix=prefix_search)]
             objs = [obj for obj in sorted(objs, key=get_last_modified)]
 
             if objs:
                 obj_name = objs[-1].key.split('/')[-1]
-                LOGGER.info('Lastest file found : {0}'.format(objs[-1].key))
+                LOGGER.info('Latest file found : {0}'.format(objs[-1].key))
                 obj_ts = datetime.strptime(str(objs[-1].last_modified), '%Y-%m-%d %H:%M:%S+00:00')
                 obj_utc = obj_ts.replace(tzinfo=from_zone)
-                #obj_bst = obj_utc.astimezone(to_zone)
-                LOGGER.info('Lastest file timestamps : {0}'.format(obj_utc.strftime('%Y-%m-%d %H:%M:%S')))
+                # obj_bst = obj_utc.astimezone(to_zone)
+                LOGGER.info('Latest file timestamp : {0}'.format(obj_utc.strftime('%Y-%m-%d %H:%M:%S')))
                 if x_mins > obj_utc:
-                    LOGGER.info('Please investigate Internal Tableau Backup Uploads. No backups uploaded for the last {0} minutes'.format(threshold_min))
-                    send_message_to_slack('Please investigate * Internal Tableau Backups*! No backups uploaded for the last {0} minutes. Last backup {1} was uploaded on {2} '.format(threshold_min, obj_name, obj_utc))
+                    LOGGER.info(
+                        'Please investigate {0} Tableau Backup Uploads. No backups uploaded for the last {1} minutes'.format(
+                            INTERNAL_EXTERNAL,
+                            threshold_min))
+                    send_message_to_slack(
+                        'Please investigate *{0} Tableau Backups*! No backups uploaded for the last {1} minutes. Last backup {2} was uploaded on {3} '.format(
+                            INTERNAL_EXTERNAL, threshold_min, obj_name, obj_utc))
                 else:
-                    LOGGER.info('Daily backup uploaded successfully within last {0} minutes, nothing to do'.format(threshold_min))
+                    LOGGER.info('Daily backup for {0} Tableau was uploaded successfully within last {1} minutes, nothing to do'.format(
+                        INTERNAL_EXTERNAL, threshold_min))
             else:
                 LOGGER.info('No backups uploaded for the last {0}'.format(x_mins.strftime('%Y-%m-%d')))
-                send_message_to_slack('Please investigate Internal Tableau backup uploads! No backups uploaded for the last {0}'.format(x_mins.strftime('%Y-%m-%d')))
+                send_message_to_slack(
+                    'Please investigate {0}} Tableau backup uploads! No backups uploaded for the last {1}'.format(
+                        INTERNAL_EXTERNAL, x_mins.strftime('%Y-%m-%d')))
 
         except Exception as err:
             error_handler(sys.exc_info()[2].tb_lineno, err)
