@@ -83,9 +83,9 @@ resource "aws_lambda_function" "int_tab_monitor" {
 
   environment {
     variables = {
-      bucket_name    = "${var.int_tab_input_bucket}-${var.namespace}"
-      threshold_min = var.int_tab_monitor_lambda_run
-      path_int_tab   = var.output_path_int_tab
+      bucket_name     = "${var.int_tab_input_bucket}-${var.namespace}"
+      threshold_min   = var.int_tab_monitor_lambda_run
+      path_tab_backup = var.output_path_int_tab_backup
     }
   }
 

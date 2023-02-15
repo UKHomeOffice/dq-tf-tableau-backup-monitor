@@ -27,7 +27,7 @@ variable "int_tab_input_bucket" {
   default = "s3-dq-data-archive-bucket"
 }
 
-variable "output_path_int_tab" {
+variable "output_path_int_tab_backup" {
   default = "tableau-int/green/"
 }
 
@@ -43,7 +43,7 @@ variable "ext_tab_input_bucket" {
   default = "s3-dq-data-archive-bucket"
 }
 
-variable "output_path_ext_tab" {
+variable "output_path_ext_tab_backup" {
   default = "tableau-ext/green/"
 }
 

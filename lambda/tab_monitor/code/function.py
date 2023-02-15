@@ -68,7 +68,7 @@ def send_message_to_slack(text):
 
     try:
         post = {
-            "text": ":fire: :sad_parrot: *INTERNAL TABLEAU BACKUP PROCESS DID NOT COMPLETE* Files are not regularly arriving in *DATA ARCHIVE* :sad_parrot: :fire:",
+            "text": ":fire: :sad_parrot: *{0} TABLEAU BACKUP PROCESS DID NOT COMPLETE* Files are not regularly arriving in *DATA ARCHIVE* :sad_parrot: :fire:".format(INTERNAL_EXTERNAL.upper()),
             "attachments": [
                 {
                     "text": "{0}".format(text),
@@ -150,7 +150,7 @@ def lambda_handler(event, context):
 
         bucket_name = os.environ['bucket_name']
         LOGGER.info('bucket_name:{0}'.format(bucket_name))
-        path = os.environ['path_int_tab']
+        path = os.environ['path_tab_backup']
         LOGGER.info('path:{0}'.format(path))
         threshold_min = os.environ.get('threshold_min', '1380')  # default value 23 hours in mins
         LOGGER.info('threshold_min:{0}'.format(threshold_min))
