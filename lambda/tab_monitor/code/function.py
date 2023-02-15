@@ -68,7 +68,7 @@ def send_message_to_slack(text):
 
     try:
         post = {
-            "text": ":fire: :sad_parrot: *{0} TABLEAU BACKUP PROCESS DID NOT COMPLETE* Files are not regularly arriving in *DATA ARCHIVE* :sad_parrot: :fire:".format(INTERNAL_EXTERNAL.upper()),
+            "text": ":fire: :sad_parrot: *{0} TABLEAU BACKUP PROCESS DID NOT COMPLETE* Files are not regularly arriving in *S3 DATA ARCHIVE* :sad_parrot: :fire:".format(INTERNAL_EXTERNAL.upper()),
             "attachments": [
                 {
                     "text": "{0}".format(text),
@@ -149,11 +149,11 @@ def lambda_handler(event, context):
         LOGGER.info(event)
 
         bucket_name = os.environ['bucket_name']
-        LOGGER.info('bucket_name:{0}'.format(bucket_name))
+        LOGGER.info('bucket_name: {0}'.format(bucket_name))
         path = os.environ['path_tab_backup']
-        LOGGER.info('path:{0}'.format(path))
+        LOGGER.info('path: {0}'.format(path))
         threshold_min = os.environ.get('threshold_min', '1380')  # default value 23 hours in mins
-        LOGGER.info('threshold_min:{0}'.format(threshold_min))
+        LOGGER.info('threshold_min: {0}'.format(threshold_min))
 
         try:
             from_zone = tz.tzutc()
@@ -162,9 +162,7 @@ def lambda_handler(event, context):
             x_mins = datetime.now() - timedelta(minutes=threshold_min)
             x_mins = x_mins.astimezone(from_zone)
             prefix_search = path
-            LOGGER.info('built prefix to search :{0}'.format(prefix_search))
-
-            LOGGER.info('Search bucket: {0} and search_path : {1}'.format(bucket_name, prefix_search))
+            LOGGER.info('Built prefix to search: {0}'.format(prefix_search))
             s3 = boto3.resource("s3")
 
             def get_last_modified(obj):
@@ -176,27 +174,25 @@ def lambda_handler(event, context):
 
             if objs:
                 obj_name = objs[-1].key.split('/')[-1]
-                LOGGER.info('Latest file found : {0}'.format(objs[-1].key))
+                LOGGER.info('Latest file found: {0}'.format(objs[-1].key))
                 obj_ts = datetime.strptime(str(objs[-1].last_modified), '%Y-%m-%d %H:%M:%S+00:00')
                 obj_utc = obj_ts.replace(tzinfo=from_zone)
                 # obj_bst = obj_utc.astimezone(to_zone)
-                LOGGER.info('Latest file timestamp : {0}'.format(obj_utc.strftime('%Y-%m-%d %H:%M:%S')))
+                LOGGER.info('Latest file timestamp: {0}'.format(obj_utc.strftime('%Y-%m-%d %H:%M:%S')))
                 if x_mins > obj_utc:
-                    LOGGER.info(
-                        'Please investigate {0} Tableau Backup Uploads. No backups uploaded for the last {1} minutes'.format(
-                            INTERNAL_EXTERNAL,
-                            threshold_min))
-                    send_message_to_slack(
-                        'Please investigate *{0} Tableau Backups*! No backups uploaded for the last {1} minutes. Last backup {2} was uploaded on {3} '.format(
-                            INTERNAL_EXTERNAL, threshold_min, obj_name, obj_utc))
+                    msg = 'Please investigate *{0} Tableau Backups*! No backups uploaded for the last {1} minutes. Last backup {2} was uploaded on {3} '.format(
+                            INTERNAL_EXTERNAL, threshold_min, obj_name, obj_utc)
+                    LOGGER.info(msg)
+                    send_message_to_slack(msg)
                 else:
-                    LOGGER.info('Daily backup for {0} Tableau was uploaded successfully within last {1} minutes, nothing to do'.format(
-                        INTERNAL_EXTERNAL, threshold_min))
+                    msg = 'Daily backup for {0} Tableau was uploaded successfully within last {1} minutes, nothing to do'.format(
+                        INTERNAL_EXTERNAL, threshold_min)
+                    LOGGER.info(msg)
             else:
-                LOGGER.info('No backups uploaded for the last {0}'.format(x_mins.strftime('%Y-%m-%d')))
-                send_message_to_slack(
-                    'Please investigate {0}} Tableau backup uploads! No backups uploaded for the last {1}'.format(
-                        INTERNAL_EXTERNAL, x_mins.strftime('%Y-%m-%d')))
+                msg = 'Please investigate {0}} Tableau backup uploads! No backups uploaded for the last {1}'.format(
+                    INTERNAL_EXTERNAL, x_mins.strftime('%Y-%m-%d'))
+                LOGGER.info(msg)
+                send_message_to_slack(msg)
 
         except Exception as err:
             error_handler(sys.exc_info()[2].tb_lineno, err)
