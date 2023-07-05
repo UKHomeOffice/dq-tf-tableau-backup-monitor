@@ -11,6 +11,7 @@ steps:
   pull: if-not-exists
   image: docker
   commands:
+  - /usr/local/bin/wait 30
   - docker run --rm -v $(pwd):/data -w /data hashicorp/terraform fmt --diff --check && echo $?
   when:
     event:
