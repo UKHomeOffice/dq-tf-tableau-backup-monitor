@@ -28,7 +28,7 @@ variable "int_tab_input_bucket" {
 }
 
 variable "output_path_int_tab_backup" {
-  default = "tableau-int/green/"
+  default = "tableau-int/blue/"
 }
 
 variable "ext_tab_monitor_name" {
@@ -44,7 +44,7 @@ variable "ext_tab_input_bucket" {
 }
 
 variable "output_path_ext_tab_backup" {
-  default = "tableau-ext/green/"
+  default = "tableau-ext/blue/"
 }
 
 variable "kms_key_s3" {
