@@ -39,7 +39,6 @@ x-anchors:
 
   check-format: &check-format
     - terraform --version
-    - force-fail
     - terraform fmt --diff --check
 
   run-testrunner-tests: &run-testrunner-tests
@@ -55,11 +54,6 @@ steps:
   pull: if-not-exists
   image: *terragrunt-image
   commands: *check-format
-  environment:
-    AWS_ACCESS_KEY_ID:
-      from_secret: AWS_ACCESS_KEY_ID
-    AWS_SECRET_ACCESS_KEY:
-      from_secret: AWS_SECRET_ACCESS_KEY
   when:
     event:
       - push
@@ -70,9 +64,9 @@ steps:
   commands: *retrieve-aws-key
   environment:
     VAULT_ADDR:
-      from_secret: VAULT_ADDR_NOTPROD
+      from_secret: VAULT_ADDR_DEV
     VAULT_TOKEN:
-      from_secret: VAULT_TOKEN_NOTPROD
+      from_secret: VAULT_TOKEN_DEV
   when:
     event:
       - push
