@@ -132,7 +132,7 @@ resource "aws_iam_policy" "int_tab_monitor_logging" {
         "logs:CreateLogStream",
         "logs:PutLogEvents"
       ],
-      "Resource": "${aws_cloudwatch_log_group.int_tab_monitor[0].arn}:log-stream:*"
+      "Resource": "${aws_cloudwatch_log_group.int_tab_monitor.arn}:log-stream:*"
     }
   ]
 }

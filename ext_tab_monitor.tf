@@ -132,7 +132,7 @@ resource "aws_iam_policy" "ext_tab_monitor_logging" {
         "logs:CreateLogStream",
         "logs:PutLogEvents"
       ],
-      "Resource": "${aws_cloudwatch_log_group.ext_tab_monitor[0].arn}:log-stream:*"
+      "Resource": "${aws_cloudwatch_log_group.ext_tab_monitor.arn}:log-stream:*"
     }
   ]
 }
