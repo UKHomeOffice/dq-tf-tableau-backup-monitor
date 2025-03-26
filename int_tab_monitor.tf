@@ -77,7 +77,7 @@ resource "aws_lambda_function" "int_tab_monitor" {
   role             = aws_iam_role.int_tab_monitor.arn
   handler          = "function.lambda_handler"
   source_code_hash = data.archive_file.int_tab_monitor_zip.output_base64sha256
-  runtime          = "python3.7"
+  runtime          = "python3.11"
   timeout          = "900"
   memory_size      = "2048"
 
@@ -97,6 +97,7 @@ resource "aws_lambda_function" "int_tab_monitor" {
   #   ignore_changes = [
   #     filename,
   #     last_modified,
+  #     runtime,
   #     source_code_hash,
   #   ]
   # }
