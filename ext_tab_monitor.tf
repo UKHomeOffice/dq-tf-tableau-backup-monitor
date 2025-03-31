@@ -93,14 +93,14 @@ resource "aws_lambda_function" "ext_tab_monitor" {
     Name = "lambda-${var.ext_tab_monitor_name}-${var.naming_suffix}"
   }
 
-  lifecycle {
-    ignore_changes = [
-      filename,
-      last_modified,
-      runtime,
-      source_code_hash,
-    ]
-  }
+  #lifecycle {
+  #  ignore_changes = [
+  #    filename,
+  #    last_modified,
+  #    runtime,
+  #    source_code_hash,
+  #  ]
+  #}
 
 }
 
