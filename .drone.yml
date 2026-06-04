@@ -88,9 +88,9 @@ steps:
     - export VAULT_ADDR=$${VAULT_ADDR_DEV}
     - vault token renew > /dev/null
   environment:
-    VAULT_ADDR_NOTPROD:
+    VAULT_ADDR_DEV:
       from_secret: VAULT_ADDR_DEV
-    VAULT_TOKEN_NOTPROD:
+    VAULT_TOKEN_DEV:
       from_secret: VAULT_TOKEN_DEV
   when:
     event:
